@@ -1,0 +1,8 @@
+use ExtUtils::MakeMaker;
+
+WriteMakefile(
+  'NAME' => 'CGI::Portal',
+  'AUTHOR' => 'Alexander David',
+  'VERSION_FROM' => 'Portal.pm',
+  'PREREQ_PM' => {'Digest::MD5' => '1','DBI' => '1','CGI' => '1',}
+);
