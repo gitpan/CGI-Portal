@@ -4,7 +4,7 @@ package CGI::Portal::Sessions;
 use strict;
 use Digest::MD5 qw(md5_hex);
 use vars qw($VERSION);
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 1;
 
@@ -25,10 +25,13 @@ sub authenticate_user {
       return;
     }
   }elsif (my $sid = getcookie('sid')){
-    my $sessions = $self->{'rdb'}->exec("select $self->{'conf'}{'session_user_field'} from $self->{'conf'}{'session_table'} where $self->{'conf'}{'session_sid_field'}=" . $self->{'rdb'}->escape($sid))->fetch;
-    $self->{'user'} = $sessions->[0] if $sessions->[0];
-    $self->renew_session($self->{'user'});
-    return if $sessions->[0];
+    my $exps = time() - $self->{'conf'}{'session_length'};
+    my $sessions = $self->{'rdb'}->exec("select $self->{'conf'}{'session_user_field'},$self->{'conf'}{'session_start_field'} from $self->{'conf'}{'session_table'} where $self->{'conf'}{'session_sid_field'}=" . $self->{'rdb'}->escape($sid))->fetch;
+    if ($sessions->[0] && $sessions->[1] >= $exps){
+      $self->{'user'} = $sessions->[0];
+      $self->renew_session($self->{'user'});
+      return;
+    }
   }
   $self->{'out'} .= $self->form_html();
 }
@@ -52,7 +55,8 @@ sub renew_session {
 
 sub logoff {
   my $self = shift;
-  $self->{'rdb'}->exec("delete from $self->{'conf'}{'session_table'} where $self->{'conf'}{'session_user_field'}=" . $self->{'rdb'}->escape($self->{'user'}));
+  my $sid = getcookie('sid');
+  $self->{'rdb'}->exec("delete from $self->{'conf'}{'session_table'} where $self->{'conf'}{'session_sid_field'}=" . $self->{'rdb'}->escape($sid));
   $self->{'user'} = "";
 }
 

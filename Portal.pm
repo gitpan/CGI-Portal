@@ -5,7 +5,7 @@ use strict;
 use CGI::Portal::RDB;
 use CGI;
 use vars qw($VERSION);
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 my $e;
 
@@ -40,12 +40,12 @@ sub activate {
 
   print $e->{'cookies'};
   print $cgi->header;
-  open (HEADER, "$conf->{'header_html'}");
+  open (HEADER, "$e->{'conf'}{'header_html'}");
   while (<HEADER>){print;}
   close(HEADER);
   if ($e->{'user'}){on_html($e);}else{off_html();}
   print $e->{'out'};
-  open (FOOTER, "$conf->{'footer_html'}");
+  open (FOOTER, "$e->{'conf'}{'footer_html'}");
   while (<FOOTER>){print;}
   close(FOOTER);
 }
@@ -82,6 +82,7 @@ EOF
                            'user_passw_field'    => "passw",
                            'user_email_field'    => "email",
                            'add_user_fields'     => "first_name,middle_initial,last_name,city,state,country",
+                           # does not add fields to your user table ;-)
 
                            'session_table'       => "sessions",
                            'session_index_field' => "id",
@@ -89,8 +90,11 @@ EOF
                            'session_user_field'  => "user",
                            'session_start_field' => "session_start",
                            'add_session_fields'  => "",
+                           # does not add fields to your session table ;-)
+
 
                            # Modules in the CGI::Portal::Scripts namespace, the first is the default action
+
                            'actions'             => ["logon", "logoff", "register", "profile", "changepw", "emailpw"],
 
                            'session_length'      => 7200,
@@ -108,61 +112,28 @@ EOF
 
     Applications are build by first configuring a simple startup script as above
     and then by creating modules that reside in the CGI::Portal::Scripts namespace
-    and extend CGI::Portal::Sessions. These modules must provide a subroutine "launch"
-    that the application calls once it receives an "action" parameter equal to the
-    modules names.
+    and extend CGI::Portal::Scripts. CGI::Portal does not create database tables
+    for you, so you will have to do that yourself.
 
-    For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch().
+    All requests go through the startup script, CGI::Portal then calls a module in
+    the CGI::Portal::Scripts namespace depending on the desired action. Above shown
+    actions are included in CGI::Portal.
 
-    In your modules, do not "print" or "exit". Instead append to $self->{'out'} and
-    return from launch().
+    For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
 
 =head1 Functions
 
 =head2 activate
-    CGI::Portal::activate($conf) collects input parameters, creates a database object,
-    and passes those along with the configuration from $conf on to your module for
-    creating an object instance. It then runs your modules "launch" method and
+
+    CGI::Portal::activate($conf) takes a reference to the configuration hash, collects
+    input parameters, creates a database object, and passes those on to your module
+    for creating an object instance. It then runs your modules "launch" method and
     concludes by doing the printing for you. This function is called once from your
     startup script.
 
-=head2 Sessions->new
-    CGI::Portal::Sessions->new($ref) is automatically called and receives the correct
-    parameter if your modules extend CGI::Portal::Sessions.
+=head1 Building Applications
 
-=head2 Sessions->authenticate_user
-    CGI::Portal::Sessions->authenticate_user() is an object method for use in your
-    modules and sets the objects "user" property and starts a session if user logon
-    succeeds. If user logon fails it writes the HTML for a logon form to $self->{'out'}.
-
-=head2 RDB->exec
-    CGI::Portal::RDB->exec($sql) is an object method for the database object accessible
-    thru $self->{'rdb'}. It takes a SQL statement as argument and returns a DBI
-    statement handle. Alternatively you can retrieve the database handle from
-    $self->{'rdb'}{'dbh'}.
-
-=head2 RDB->escape
-    CGI::Portal::RDB->escape(@values) is also accessible thru $self->{'rdb'} and takes
-    an array of SQL values. It uses DBI's quote() on those values and returns them as a
-    string seperated by commas.
-
-=head1 Properties
-
-=head2 conf
-    $self->{'conf'} is a hash reference to all values as set in the startup script.
-
-=head2 in
-    $self->{'in'} is a hash reference to all input parameters, stripped off HTML tags.
-
-=head2 user
-    $self->{'user'} is set by $self->authenticate_user() if logon succeeds.
-
-=head2 out
-    $self->{'out'} supposed to collect all output. Append to it insted of "print"ing.
-
-=head2 cookies
-    $self->{'cookies'} collects cookie headers you might want to set. Also used for
-    Sessions, so you might want to append to it.
+    See CGI::Portal::Scripts on Building Applications
 
 =head1 INSTALLATION
 

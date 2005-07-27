@@ -1,5 +1,6 @@
 Portal.pm
 Portal/RDB.pm
+Portal/Scripts.pm
 Portal/Sessions.pm
 Portal/Scripts/changepw.pm
 Portal/Scripts/logoff.pm

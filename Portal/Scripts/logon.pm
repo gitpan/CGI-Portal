@@ -4,7 +4,7 @@ package CGI::Portal::Scripts::logon;
 use strict;
 use CGI::Portal::Sessions;
 use vars qw(@ISA $VERSION);
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 @ISA = qw(CGI::Portal::Sessions);
 

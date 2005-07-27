@@ -5,7 +5,7 @@ use strict;
 use CGI::Portal::Scripts::logon;
 use CGI::Portal::Sessions;
 use vars qw(@ISA $VERSION);
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -16,7 +16,7 @@ sub launch {
   $self->authenticate_user();
   if ($self->{'user'}){
     $self->logoff;
-    bless $self, *{CGI::Portal::Scripts::logon};
+    bless $self, "CGI::Portal::Scripts::logon";
     $self->launch;
   }
 }

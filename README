@@ -1,4 +1,4 @@
-Module: CGI::Portal;
+Module: CGI::Portal - Extensible Framework for Multiuser Applications
 
 SYNOPSIS
 
@@ -17,6 +17,7 @@ SYNOPSIS
                            'user_passw_field'    => "passw",
                            'user_email_field'    => "email",
                            'add_user_fields'     => "first_name,middle_initial,last_name,city,state,country",
+                           # does not add fields to your user table ;-)
 
                            'session_table'       => "sessions",
                            'session_index_field' => "id",
@@ -24,8 +25,11 @@ SYNOPSIS
                            'session_user_field'  => "user",
                            'session_start_field' => "session_start",
                            'add_session_fields'  => "",
+                           # does not add fields to your session table ;-)
+
 
                            # Modules in the CGI::Portal::Scripts namespace, the first is the default action
+
                            'actions'             => ["logon", "logoff", "register", "profile", "changepw", "emailpw"],
 
                            'session_length'      => 7200,
@@ -43,61 +47,28 @@ DESCRIPTION
 
     Applications are build by first configuring a simple startup script as above
     and then by creating modules that reside in the CGI::Portal::Scripts namespace
-    and extend CGI::Portal::Sessions. These modules must provide a subroutine "launch"
-    that the application calls once it receives an "action" parameter equal to the
-    modules names.
+    and extend CGI::Portal::Scripts. CGI::Portal does not create database tables
+    for you, so you will have to do that yourself.
 
-    For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch().
+    All requests go through the startup script, CGI::Portal then calls a module in
+    the CGI::Portal::Scripts namespace depending on the desired action. Above shown
+    actions are included in CGI::Portal.
 
-    In your modules, do not "print" or "exit". Instead append to $self->{'out'} and
-    return from launch().
+    For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
 
 Functions
 
   activate
-    CGI::Portal::activate($conf) collects input parameters, creates a database object,
-    and passes those along with the configuration from $conf on to your module for
-    creating an object instance. It then runs your modules "launch" method and
+
+    CGI::Portal::activate($conf) takes a reference to the configuration hash, collects
+    input parameters, creates a database object, and passes those on to your module
+    for creating an object instance. It then runs your modules "launch" method and
     concludes by doing the printing for you. This function is called once from your
     startup script.
 
-  Sessions->new
-    CGI::Portal::Sessions->new($ref) is automatically called and receives the correct
-    parameter if your modules extend CGI::Portal::Sessions.
+Building Applications
 
-  Sessions->authenticate_user
-    CGI::Portal::Sessions->authenticate_user() is an object method for use in your
-    modules and sets the objects "user" property and starts a session if user logon
-    succeeds. If user logon fails it writes the HTML for a logon form to $self->{'out'}.
-
-  RDB->exec
-    CGI::Portal::RDB->exec($sql) is an object method for the database object accessible
-    thru $self->{'rdb'}. It takes a SQL statement as argument and returns a DBI
-    statement handle. Alternatively you can retrieve the database handle from
-    $self->{'rdb'}{'dbh'}.
-
-  RDB->escape
-    CGI::Portal::RDB->escape(@values) is also accessible thru $self->{'rdb'} and takes
-    an array of SQL values. It uses DBI's quote() on those values and returns them as a
-    string seperated by commas.
-
-Properties
-
-  conf
-    $self->{'conf'} is a hash reference to all values as set in the startup script.
-
-  in
-    $self->{'in'} is a hash reference to all input parameters, stripped off HTML tags.
-
-  user
-    $self->{'user'} is set by $self->authenticate_user() if logon succeeds.
-
-  out
-    $self->{'out'} supposed to collect all output. Append to it insted of "print"ing.
-
-  cookies
-    $self->{'cookies'} collects cookie headers you might want to set. Also used for
-    Sessions, so you might want to append to it.
+    See CGI::Portal::Scripts on Building Applications
 
 INSTALLATION
 
@@ -105,6 +76,101 @@ INSTALLATION
     make
     make test
     make install
+
+AUTHOR
+
+    Alexander David <cpanalpo@yahoo.com>
+
+================================================================
+
+Module: CGI::Portal::Scripts - Extending CGI::Portal
+
+SYNOPSIS
+
+    package CGI::Portal::Scripts::some_name;
+
+    use CGI::Portal::Scripts;
+    use vars qw(@ISA);
+
+    @ISA = qw(CGI::Portal::Scripts);
+
+    1;
+
+    sub launch {
+      my $self = shift;
+      .... 
+    }
+
+DESCRIPTION
+
+    Applications based on CGI::Portal are build by creating modules that reside in the
+    CGI::Portal::Scripts namespace and extend CGI::Portal::Scripts. These modules
+    must provide a subroutine launch() that CGI::Portal calls as an object method to
+    run your modules code.
+
+    A subroutine new() is not necessary or helpful as you are extending CGI::Portal::Scripts.
+
+    In your modules, do not print() or exit(). Instead of "print"ing append to $self->{'out'}
+    or $self->{'cookies'} and instead of "exit"ing, "return" from launch().
+
+    Extending CGI::Portal::Scripts, gives you access to an object with the following attributes.
+
+Attributes
+
+  conf
+
+    $self->{'conf'} references a hash containing all values as set in the startup script.
+
+  in
+
+    $self->{'in'} references a hash containing all input parameters, stripped off any HTML tags.
+
+  user
+
+    $self->{'user'} is set by $self->authenticate_user() if logon succeeds.
+
+  rdb
+
+    $self->{'rdb'} is a CGI::Portal::RDB database object including a database handle.
+
+  out
+
+    $self->{'out'} supposed to collect all output.
+
+  cookies
+
+    $self->{'cookies'} collects cookie headers you might want to set. It is also used for
+    Sessions, so you might want to append to it.
+
+Functions
+
+  authenticate_user
+
+    $self->authenticate_user() takes no arguments and does not return anything. It sets
+    $self->{'user'} and starts a session if user logon succeeds. If user logon fails
+    it writes the HTML for a logon form to $self->{'out'}. It also maintains the sessions
+    during subsequent calls.
+
+    $self->authenticate_user();
+    return unless $self->{'user'};
+    ....
+
+  logoff
+
+    $self->logoff() takes no arguments and does not return anything. It removes the current
+    users session id from the database and unsets the session cookie.
+
+  RDB->exec
+
+    $self->{'rdb'}->exec($sql) is an object method for the database object. It takes a SQL
+    statement as argument and returns a DBI statement handle.
+
+    The database handle can be directly retrieved from $self->{'rdb'}{'dbh'}.
+
+  RDB->escape
+
+    $self->{'rdb'}->escape(@values) takes an array of SQL values. It uses DBI's quote() on those
+    values and returns them as a string seperated by commas.
 
 AUTHOR
 

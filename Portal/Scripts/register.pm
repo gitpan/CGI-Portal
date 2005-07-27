@@ -6,7 +6,7 @@ use Digest::MD5 qw(md5_hex);
 use CGI::Portal::Scripts::logon;
 use CGI::Portal::Sessions;
 use vars qw(@ISA $VERSION);
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -25,7 +25,7 @@ sub launch {
       my $values = $self->{'rdb'}->escape($c,$self->{'in'}{'user'},$enc_passw,$self->{'in'}{'email'},$self->{'in'}{'first_name'},$self->{'in'}{'middle_initial'},$self->{'in'}{'last_name'},$self->{'in'}{'city'},$self->{'in'}{'state'},$self->{'in'}{'country'});
       $self->{'rdb'}->exec("insert into $self->{'conf'}{'user_table'} ($self->{'conf'}{'user_index_field'},$self->{'conf'}{'user_user_field'},$self->{'conf'}{'user_passw_field'},$self->{'conf'}{'user_email_field'},$self->{'conf'}{'add_user_fields'}) values ($values)");
       $self->{'user'} = $self->{'in'}{'user'};
-      bless $self, *{CGI::Portal::Scripts::logon};
+      bless $self, "CGI::Portal::Scripts::logon";
       $self->launch;
       return;
     }
