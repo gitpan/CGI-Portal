@@ -4,7 +4,7 @@ package CGI::Portal::Sessions;
 use strict;
 use Digest::MD5 qw(md5_hex);
 use vars qw($VERSION);
-$VERSION = "0.02";
+$VERSION = "0.04";
 
 1;
 
@@ -16,6 +16,8 @@ sub new {
 
 sub authenticate_user {
   my $self = shift;
+  my $template = HTML::Template->new(filename => "$self->{'conf'}{'template_dir'}Sessions.html");
+  $template->param(SCRIPT_NAME => $ENV{'SCRIPT_NAME'});
   if ($self->{'in'}{'user'} && $self->{'in'}{'password'}){
     my $users = $self->{'rdb'}->exec("select $self->{'conf'}{'user_user_field'},$self->{'conf'}{'user_passw_field'} from $self->{'conf'}{'user_table'} where $self->{'conf'}{'user_user_field'} like " . $self->{'rdb'}->escape($self->{'in'}{'user'}))->fetch;
     if (md5_hex($self->{'in'}{'password'}) eq $users->[1]){
@@ -33,7 +35,7 @@ sub authenticate_user {
       return;
     }
   }
-  $self->{'out'} .= $self->form_html();
+  $self->{'out'} = $template->output;
 }
 
 sub start_session {
@@ -78,36 +80,4 @@ sub getcookie {
       }
     }
   }
-}
-
-sub form_html {
-  return <<EOF;
-<form method="post">
-<table>
-<tr>
-<td><strong>Username:</strong></td>
-<td>
-<input type="text" name="user" size="25">
-</td>
-</tr>
-<tr>
-<td><strong>Password:</strong></td>
-<td>
-<input type="password" name="password" size="25">
-</td>
-</tr>
-<tr align="center">
-<td colspan="2">
-<input type="hidden" name="action" value="logon">
-<input type="submit" name="login" value="Log in">
-</td>
-</tr>
-<tr align="center">
-<td colspan="2">
-<a href="$ENV{'SCRIPT_NAME'}?action=emailpw">I forgot my password</a>
-</td>
-</tr>
-</table>
-</form>
-EOF
 }

@@ -2,6 +2,8 @@ Portal.pm
 Portal/RDB.pm
 Portal/Scripts.pm
 Portal/Sessions.pm
+Portal/Scripts/Header.pm
+Portal/Scripts/Footer.pm
 Portal/Scripts/changepw.pm
 Portal/Scripts/logoff.pm
 Portal/Scripts/profile.pm
@@ -12,3 +14,4 @@ MANIFEST
 Makefile.PL
 test.pl
 README
+META.yml                                 Module meta-data (added by MakeMaker)

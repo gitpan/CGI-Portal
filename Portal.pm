@@ -3,10 +3,15 @@ package CGI::Portal;
 
 use strict;
 use CGI::Portal::RDB;
+use CGI::Portal::Scripts::Header;
+use CGI::Portal::Scripts::Footer;
 use CGI;
+use HTML::Template;
 use vars qw($VERSION);
-$VERSION = "0.02";
+$VERSION = "0.04";
 
+my $h;
+my $f;
 my $e;
 
 1;
@@ -38,32 +43,21 @@ sub activate {
   $e = $c->new($i);
   $e->launch;
 
+  $h = CGI::Portal::Scripts::Header->new({});
+  $h->launch($e);
+  $f = CGI::Portal::Scripts::Footer->new({});
+  $f->launch($e);
+
   print $e->{'cookies'};
   print $cgi->header;
-  open (HEADER, "$e->{'conf'}{'header_html'}");
-  while (<HEADER>){print;}
-  close(HEADER);
-  if ($e->{'user'}){on_html($e);}else{off_html();}
+  print $h->{'out'};
   print $e->{'out'};
-  open (FOOTER, "$e->{'conf'}{'footer_html'}");
-  while (<FOOTER>){print;}
-  close(FOOTER);
-}
-
-sub on_html {
-  my $e = shift;
-  print <<EOF;
-EOF
-}
-
-sub off_html {
-  print <<EOF;
-EOF
+  print $f->{'out'};
 }
 
 =head1 NAME
 
-    CGI::Portal - Extensible Framework for Multiuser Applications
+CGI::Portal - Extensible Framework for Multiuser Applications
 
 =head1 SYNOPSIS
 
@@ -80,17 +74,15 @@ EOF
                            'user_index_field'    => "id",
                            'user_user_field'     => "user",
                            'user_passw_field'    => "passw",
-                           'user_email_field'    => "email",
-                           'add_user_fields'     => "first_name,middle_initial,last_name,city,state,country",
-                           # does not add fields to your user table ;-)
+                           'user_additional'     => ["email","first_name","middle_initial","last_name","city","state","country"],
+                           # at least:              ["email"],
 
                            'session_table'       => "sessions",
                            'session_index_field' => "id",
                            'session_sid_field'   => "sid",
                            'session_user_field'  => "user",
                            'session_start_field' => "session_start",
-                           'add_session_fields'  => "",
-                           # does not add fields to your session table ;-)
+                           'session_additional'  => "",
 
 
                            # Modules in the CGI::Portal::Scripts namespace, the first is the default action
@@ -100,40 +92,41 @@ EOF
                            'session_length'      => 7200,
                            'admin_email'         => "some_user\@some_host.com",
 
+                           'template_dir'        => "templates/", # include trailing slash
                            'header_html'         => "header.html",
                            'footer_html'         => "footer.html",
                            'logon_success_html'  => "logon.html"});
 
 =head1 DESCRIPTION
 
-    CGI::Portal is intended as a framework for the design of extensible,
-    plug-configure-and-play multiuser web applications based on preferred object
-    oriented coding standards. It includes authentication and session management.
+CGI::Portal is a framework for the design of extensible,
+plug-configure-and-play multiuser web applications based on preferred object
+oriented coding standards. It provides authentication, session management, internal 
+redirects and a modular architecture to build complex applications.
 
-    Applications are build by first configuring a simple startup script as above
-    and then by creating modules that reside in the CGI::Portal::Scripts namespace
-    and extend CGI::Portal::Scripts. CGI::Portal does not create database tables
-    for you, so you will have to do that yourself.
+It requires a database including a user and a sessions table, a collection of HTML::Template
+style templates and a properly configured startup script. To start you may want to install
+the provided L<Templates|http://cpan.org/pub/CPAN/authors/id/A/AL/ALPO/Templates/Templates.tar.gz>.
 
-    All requests go through the startup script, CGI::Portal then calls a module in
-    the CGI::Portal::Scripts namespace depending on the desired action. Above shown
-    actions are included in CGI::Portal.
+All requests access through the startup script, and are handled by the module in
+the CGI::Portal::Scripts namespace that corresponds to the desired action. Above shown
+actions are included in CGI::Portal.
 
-    For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
+For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
 
-=head1 Functions
+=head1 FUNCTIONS
 
 =head2 activate
 
-    CGI::Portal::activate($conf) takes a reference to the configuration hash, collects
-    input parameters, creates a database object, and passes those on to your module
-    for creating an object instance. It then runs your modules "launch" method and
-    concludes by doing the printing for you. This function is called once from your
-    startup script.
+CGI::Portal::activate($conf) takes a reference to the configuration hash, collects
+input parameters, creates a database object, and passes those on to your module
+for creating an object instance. It then runs your modules "launch" method and
+concludes by doing the printing for you. This function is called once from your
+startup script.
 
-=head1 Building Applications
+=head1 BUILDING APPLICATIONS
 
-    See CGI::Portal::Scripts on Building Applications
+See CGI::Portal::Scripts on Building Applications
 
 =head1 INSTALLATION
 
@@ -144,6 +137,6 @@ EOF
 
 =head1 AUTHOR
 
-    Alexander David <cpanalpo@yahoo.com>
+Alexander David <cpanalpo@yahoo.com>
 
 =cut

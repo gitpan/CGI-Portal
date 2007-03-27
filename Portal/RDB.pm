@@ -4,7 +4,7 @@ package CGI::Portal::RDB;
 use strict;
 use DBI;
 use vars qw($VERSION);
-$VERSION = "0.02";
+$VERSION = "0.04";
 
 1;
 

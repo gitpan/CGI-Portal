@@ -4,7 +4,7 @@ package CGI::Portal::Scripts::logon;
 use strict;
 use CGI::Portal::Sessions;
 use vars qw(@ISA $VERSION);
-$VERSION = "0.02";
+$VERSION = "0.04";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -14,8 +14,7 @@ sub launch {
   my $self = shift;
   $self->authenticate_user();
   if ($self->{'user'}){
-    open (LOGON, "$self->{'conf'}{'logon_success_html'}");
-    while (<LOGON>){$self->{'out'} .= $_;}
-    close(LOGON);
+    my $template = HTML::Template->new(filename => "$self->{'conf'}{'template_dir'}$self->{'conf'}{'logon_success_html'}");
+    $self->{'out'} = $template->output;
   }
 }

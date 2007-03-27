@@ -5,7 +5,7 @@ use strict;
 use Digest::MD5 qw(md5_hex);
 use CGI::Portal::Sessions;
 use vars qw(@ISA $VERSION);
-$VERSION = "0.02";
+$VERSION = "0.04";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -13,9 +13,10 @@ $VERSION = "0.02";
 
 sub launch {
   my $self = shift;
-  my $programs;
+  my $template = HTML::Template->new(filename => "$self->{'conf'}{'template_dir'}emailpw.html");
+  $template->param(SCRIPT_NAME => $ENV{'SCRIPT_NAME'});
   if ($self->{'in'}{'usr'}){
-    my $r = $self->{'rdb'}->exec("select $self->{'conf'}{'user_email_field'},$self->{'conf'}{'user_user_field'} from $self->{'conf'}{'user_table'} where $self->{'conf'}{'user_user_field'} like " . $self->{'rdb'}->escape($self->{'in'}{'usr'}) . " limit 1")->fetch;
+    my $r = $self->{'rdb'}->exec("select $self->{'conf'}{'user_additional'}[0],$self->{'conf'}{'user_user_field'} from $self->{'conf'}{'user_table'} where $self->{'conf'}{'user_user_field'} like " . $self->{'rdb'}->escape($self->{'in'}{'usr'}) . " limit 1")->fetch;
     if ($r->[0] =~ /.*@.*\./){
       my $pw = substr(md5_hex(rand(64)), 1, 9);
       my $enc_pw = md5_hex($pw);
@@ -24,14 +25,14 @@ sub launch {
       $self->{'out'} = "A temporary password has been emailed to you.";
     }
     elsif (! $r->[0] ){
-      $programs .= $self->html_form("Unknown User");
+      $template->param(HOME => "Unknown User");
+      $self->{'out'} = $template->output;
     }else{
-      $programs .= "Invalid email on record, please contact us.";
+      $self->{'out'} = "Invalid email on record, please contact us.";
     }
   }else{
-    $programs .= $self->html_form();
+    $self->{'out'} = $template->output;
   }
-  $self->{'out'} = $programs;
 }
 
 sub mailit {
@@ -45,32 +46,4 @@ sub mailit {
   print MAIL "Subject: $subject\n\n";
   print MAIL "$message";
   close (MAIL);
-}
-
-sub html_form {
-  my $self = shift;
-  my $ro = shift;
-  return <<EOF;
-<form method="post" action="$ENV{'SCRIPT_NAME'}?action=logon">
-<table>
-<tr>
-<td colspan="2" align="center">
-$ro&nbsp;
-</td>
-</tr>
-<tr>
-<td><strong>Username:</strong></td>
-<td>
-<input type="text" name="usr" size="25">
-</td>
-</tr>
-<tr align="center">
-<td colspan="2">
-<input type="hidden" name="action" value="emailpw">
-<input type="submit" name="submit" value="Reset my password">
-</td>
-</tr>
-</table>
-</form>
-EOF
 }
