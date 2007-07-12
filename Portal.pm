@@ -8,7 +8,7 @@ use CGI::Portal::Scripts::Footer;
 use CGI;
 use HTML::Template;
 use vars qw($VERSION);
-$VERSION = "0.04";
+$VERSION = "0.08";
 
 my $h;
 my $f;
@@ -105,8 +105,8 @@ oriented coding standards. It provides authentication, session management, inter
 redirects and a modular architecture to build complex applications.
 
 It requires a database including a user and a sessions table, a collection of HTML::Template
-style templates and a properly configured startup script. To start you may want to install
-the provided L<Templates|http://cpan.org/pub/CPAN/authors/id/A/AL/ALPO/Templates/Templates.tar.gz>.
+style templates and a properly configured startup script. To start with CGI::Portal you
+may want to install the provided templates at http://cgi-portal.sourceforge.net/
 
 All requests access through the startup script, and are handled by the module in
 the CGI::Portal::Scripts namespace that corresponds to the desired action. Above shown
@@ -137,6 +137,6 @@ See CGI::Portal::Scripts on Building Applications
 
 =head1 AUTHOR
 
-Alexander David <cpanalpo@yahoo.com>
+Alexander David P <cpanalpo@yahoo.com>
 
 =cut

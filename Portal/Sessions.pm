@@ -4,7 +4,7 @@ package CGI::Portal::Sessions;
 use strict;
 use Digest::MD5 qw(md5_hex);
 use vars qw($VERSION);
-$VERSION = "0.04";
+$VERSION = "0.08";
 
 1;
 

@@ -4,7 +4,7 @@ package CGI::Portal::Scripts;
 use strict;
 use CGI::Portal::Sessions;
 use vars qw(@ISA $VERSION);
-$VERSION = "0.04";
+$VERSION = "0.08";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -30,7 +30,7 @@ CGI::Portal::Scripts - Building Applications
       .... 
     }
 
-=head2 Internal Redirect
+=head2 Internal Redirects
 
     package CGI::Portal::Scripts::some_name;
 
@@ -52,7 +52,7 @@ CGI::Portal::Scripts - Building Applications
 
 =head1 DESCRIPTION
 
-Applications based on CGI::Portal are build by creating modules that reside in the
+CGI::Portal applications are build by creating modules that reside in the
 CGI::Portal::Scripts namespace and extend CGI::Portal::Scripts. These modules
 must provide a subroutine launch() that CGI::Portal calls as an object method to
 run your modules code.
@@ -123,6 +123,6 @@ values and returns them as a string seperated by commas.
 
 =head1 AUTHOR
 
-Alexander David <cpanalpo@yahoo.com>
+Alexander David P<cpanalpo@yahoo.com>
 
 =cut

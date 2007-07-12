@@ -6,7 +6,7 @@ use Digest::MD5 qw(md5_hex);
 use CGI::Portal::Scripts::logon;
 use CGI::Portal::Sessions;
 use vars qw(@ISA $VERSION);
-$VERSION = "0.04";
+$VERSION = "0.08";
 
 @ISA = qw(CGI::Portal::Sessions);
 
