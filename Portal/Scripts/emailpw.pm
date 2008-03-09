@@ -1,11 +1,14 @@
 package CGI::Portal::Scripts::emailpw;
-# Copyright (c) 2005 Alexander David. All rights reserved.
+# Copyright (c) 2008 Alexander David P. All rights reserved.
+#
+# Generate a random passw, update and email to user 
 
 use strict;
 use Digest::MD5 qw(md5_hex);
 use CGI::Portal::Sessions;
+
 use vars qw(@ISA $VERSION);
-$VERSION = "0.08";
+$VERSION = "0.10";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -13,24 +16,47 @@ $VERSION = "0.08";
 
 sub launch {
   my $self = shift;
+
+            #
   my $template = HTML::Template->new(filename => "$self->{'conf'}{'template_dir'}emailpw.html");
   $template->param(SCRIPT_NAME => $ENV{'SCRIPT_NAME'});
+
+            # Form action
   if ($self->{'in'}{'usr'}){
+
+            # Get users email
     my $r = $self->{'rdb'}->exec("select $self->{'conf'}{'user_additional'}[0],$self->{'conf'}{'user_user_field'} from $self->{'conf'}{'user_table'} where $self->{'conf'}{'user_user_field'} like " . $self->{'rdb'}->escape($self->{'in'}{'usr'}) . " limit 1")->fetch;
+
+            # Validate email
     if ($r->[0] =~ /.*@.*\./){
+
+            # Generate a passw
       my $pw = substr(md5_hex(rand(64)), 1, 9);
+
+            # Hash the passw
       my $enc_pw = md5_hex($pw);
+
+            # Update
       $self->{'rdb'}->exec("update $self->{'conf'}{'user_table'} set $self->{'conf'}{'user_passw_field'}=\'$enc_pw\' where $self->{'conf'}{'user_user_field'}=" . $self->{'rdb'}->escape($r->[1]));
+
+            # Email passw to user
       mailit($r->[0],$self->{'conf'}{'admin_email'},"Logon Info ","Please use $pw to log on, and choose a new password at your convenience.");
       $self->{'out'} = "A temporary password has been emailed to you.";
     }
     elsif (! $r->[0] ){
+
+            # No email no user
       $template->param(HOME => "Unknown User");
+
+            # Assign template output to object out
       $self->{'out'} = $template->output;
+
     }else{
       $self->{'out'} = "Invalid email on record, please contact us.";
     }
   }else{
+
+            # Assign template output to object out
     $self->{'out'} = $template->output;
   }
 }

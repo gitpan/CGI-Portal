@@ -1,10 +1,13 @@
 package CGI::Portal::Scripts;
-# Copyright (c) 2005 Alexander David. All rights reserved.
+# Copyright (c) 2008 Alexander David P. All rights reserved.
+#
+# Extend this class to add useful attributes and functions
 
 use strict;
 use CGI::Portal::Sessions;
+
 use vars qw(@ISA $VERSION);
-$VERSION = "0.08";
+$VERSION = "0.10";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -52,14 +55,14 @@ CGI::Portal::Scripts - Building Applications
 
 =head1 DESCRIPTION
 
-CGI::Portal applications are build by creating modules that reside in the
-CGI::Portal::Scripts namespace and extend CGI::Portal::Scripts. These modules
+CGI::Portal applications are build by creating classes that reside in the
+CGI::Portal::Scripts namespace and extend CGI::Portal::Scripts. These classes
 must provide a subroutine launch() that CGI::Portal calls as an object method to
-run your modules code.
+run your code.
 
 A subroutine new() is not necessary or helpful as you are extending CGI::Portal::Scripts.
 
-In your modules, do not print() or exit(). Instead of "print"ing append to $self->{'out'}
+In your classes, do not print() or exit(). Instead of "print"ing append to $self->{'out'}
 or $self->{'cookies'} and instead of "exit"ing, "return" from launch().
 
 Extending CGI::Portal::Scripts, gives you access to an object with the following attributes.
