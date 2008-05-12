@@ -1,10 +1,11 @@
-package CGI::Portal::Scripts::logoff;
+package CGI::Portal::Controls::logoff;
 # Copyright (c) 2008 Alexander David P. All rights reserved.
 #
 # Remove session
 
 use strict;
 
+use CGI::Portal::Scripts::logon;
 use CGI::Portal::Scripts;
 
 use vars qw(@ISA $VERSION);
@@ -27,6 +28,7 @@ sub launch {
     $self->{'tmpl_vars'}{'result'} = "You are logged off.";
   }
 
-            # Assign tmpl
-  $self->assign_tmpl("Sessions.html");
+            # Redirect
+  $self->CGI::Portal::Scripts::logon::launch();
+  return;
 }

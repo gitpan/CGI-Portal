@@ -4,10 +4,12 @@ package CGI::Portal::Sessions;
 # Authentication and Session class
 
 use strict;
+
 use Digest::MD5 qw(md5_hex);
 
 use vars qw($VERSION);
-$VERSION = "0.10";
+
+$VERSION = "0.12";
 
 1;
 
@@ -20,10 +22,6 @@ sub new {
             # Verify password or session
 sub authenticate_user {
   my $self = shift;
-
-            # Read template
-  my $template = HTML::Template->new(filename => "$self->{'conf'}{'template_dir'}Sessions.html");
-  $template->param(SCRIPT_NAME => $ENV{'SCRIPT_NAME'});
 
             # User is logging in
   if ($self->{'in'}{'user'} && $self->{'in'}{'password'}){
@@ -64,8 +62,8 @@ sub authenticate_user {
     }
   }
 
-            # Assign template output to object out
-  $self->{'out'} = $template->output;
+            # Assign tmpl
+  $self->assign_tmpl("Sessions.html");
 }
 
             # Create a session
@@ -74,7 +72,12 @@ sub start_session {
   my $current_time = time();
 
             # Generate a session id
-  my $sid = md5_hex($$ , time() , rand(8888) );
+  my $sid;
+  my $cids;
+  while ($cids->[0] || ! $sid) {
+    $sid = md5_hex($$ , time() , rand(8888) );
+    $cids = $self->{'rdb'}->exec("select $self->{'conf'}{'session_index_field'} from $self->{'conf'}{'session_table'} where $self->{'conf'}{'session_sid_field'} = $sid limit 1")->fetch;
+  }
 
             # Get current session index
   my $cc = $self->{'rdb'}->exec("select $self->{'conf'}{'session_index_field'} from $self->{'conf'}{'session_table'} order by $self->{'conf'}{'session_index_field'} desc limit 1")->fetch;
@@ -106,6 +109,21 @@ sub clean_sessions {
   my $self = shift;
   my $exps = time() - $self->{'conf'}{'session_length'};
   $self->{'rdb'}->exec("delete from $self->{'conf'}{'session_table'} where $self->{'conf'}{'session_start_field'} < $exps");
+}
+
+            # Assign template output to object out
+sub assign_tmpl {
+  my ($self, $i) = @_;
+
+            # Read template
+  my $template = HTML::Template->new(die_on_bad_params => 0, filename => "$self->{'conf'}{'template_dir'}$i");
+  $self->{'tmpl_vars'}{'SCRIPT_NAME'} = $ENV{'SCRIPT_NAME'};
+
+            # Assign vars to template
+  $template->param(%{$self->{'tmpl_vars'}});
+
+            # Assign template output to object out
+  $self->{'out'} = $template->output;
 }
 
 sub getcookie {

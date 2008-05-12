@@ -1,18 +1,18 @@
 package CGI::Portal::Scripts::profile;
 # Copyright (c) 2008 Alexander David P. All rights reserved.
 #
-# Update user info
+# Profile page
 
 use strict;
-use Digest::MD5 qw(md5_hex);
-use CGI::Portal::Sessions;
+
+use CGI::Portal::Scripts;
 
 use vars qw(@ISA $VERSION);
-$VERSION = "0.10";
 
-@ISA = qw(CGI::Portal::Sessions);
+$VERSION = "0.12";
 
-my $template;
+@ISA = qw(CGI::Portal::Scripts);
+
 my $r;
 
 1;
@@ -24,10 +24,6 @@ sub launch {
   $self->authenticate_user();
   if ($self->{'user'}){
 
-            # Read template
-    $template = HTML::Template->new(filename => "$self->{'conf'}{'template_dir'}profile.html");
-    $template->param(SCRIPT_NAME => $ENV{'SCRIPT_NAME'});
-
             # Join user fields for SQL
     my $fields = join(',', @{$self->{'conf'}{'user_additional'}});
 
@@ -35,31 +31,10 @@ sub launch {
     $r = $self->{'rdb'}->exec("select $fields from $self->{'conf'}{'user_table'} where $self->{'conf'}{'user_user_field'}=" . $self->{'rdb'}->escape($self->{'user'}) . " limit 1")->fetch;
 
             # Assign template vars
-    $self->input_html();
+    $self->CGI::Portal::Scripts::profile::input_html();
 
-            # Form action
-    if ($self->{'in'}{'submit'}){
-
-            # Validate
-      unless ($self->input_error("email")){
-
-            # Escape user
-        my $user = $self->{'rdb'}->escape($self->{'user'});
-
-            # Loop thru user fields and update
-        my $c = 0;
-        foreach my $f (@{$self->{'conf'}{'user_additional'}}) {
-          my $value = $self->{'rdb'}->escape($self->{'in'}{$f});
-          $self->{'rdb'}->exec("update $self->{'conf'}{'user_table'} set $f=$value where $self->{'conf'}{'user_user_field'}=$user") if ($self->{'in'}{$f} ne $r->[$c]);
-          $c++;
-        }
-
-        $template->param(HOME => "Profile is updated.");
-      }
-    }
-
-            # Assign template output to out
-    $self->{'out'} = $template->output;
+            # Assign tmpl
+    $self->assign_tmpl("profile.html");
   }
 }
 
@@ -72,7 +47,7 @@ sub input_html {
   my $c = 0;
   foreach my $f (@{$self->{'conf'}{'user_additional'}}) {
     my $value = $self->{'in'}{$f} || $r->[$c];
-    $template->param($f => $value);
+    $self->{'tmpl_vars'}{$f} = $value;
     $c++;
   }
 
@@ -91,22 +66,5 @@ sub input_html {
   $state .= "</select>";
 
             # Assign to template var state
-  $template->param(state => $state);
-}
-
-
-            # Validate
-sub input_error {
-  my ($self, @requireds)  = @_;
-  my $input_error = 0;
-
-            # Loop thru requireds
-  foreach my $required (@requireds) {
-    if (!$self->{'in'}{$required}){
-      $template->param("${required}_msg" => "Field is required");
-      $input_error = 1;
-    }
-  }
-
-  return $input_error;
+  $self->{'tmpl_vars'}{'state'} = $state;
 }

@@ -5,24 +5,21 @@ package CGI::Portal::Scripts::Header;
 
 use strict;
 
-use vars qw($VERSION);
-$VERSION = "0.10";
+use CGI::Portal::Scripts;
 
+use vars qw(@ISA $VERSION);
+
+$VERSION = "0.12";
+
+@ISA = qw(CGI::Portal::Scripts);
 1;
-
-sub new {
-  my ($class, $i) = @_;
-  bless $i, $class;
-  return $i;
-}
 
 sub launch {
   my ($self, $e) = @_;
 
-            # Read the template
-  my $template = HTML::Template->new(filename => "$e->{'conf'}{'template_dir'}$e->{'conf'}{'header_html'}");
-  $template->param(SCRIPT_NAME => $ENV{'SCRIPT_NAME'});
+            # Assign tmpl
+  $self->{'tmpl_vars'}{'result'} = $e->{'tmpl_vars'}{'result'};
 
-            # Assign template output to  object out
-  $self->{'out'} = $template->output;
+            # Assign tmpl
+  $self->assign_tmpl($e->{'conf'}{'header_html'});
 }

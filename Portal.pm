@@ -1,66 +1,89 @@
 package CGI::Portal;
 # Copyright (c) 2008 Alexander David P. All rights reserved.
 #
-# Prepare and run the requested class code, then print
+# Create, run requested object and print
 
 use strict;
+
+use CGI;
 use CGI::Portal::RDB;
 use CGI::Portal::Scripts::Header;
 use CGI::Portal::Scripts::Footer;
-use CGI;
 use HTML::Template;
 
 use vars qw($VERSION);
-$VERSION = "0.10";
+
+$VERSION = "0.12";
 
 1;
 
-            # Prepare and run the requested class code, then print
+            # Create, run requested object and print
 sub activate {
   my $conf = shift;
+  my $e;
+  my $cl;
+
   my $cgi = new CGI();
+
+            # Get parameters
   my @v = $cgi->param;
   my %in;
-
-            # Loop thru params and assign %in
   foreach my $f (@v){
     my $v = $cgi->param($f);
-
-            # Remove tags
     $v =~ s/<.*\r*\n*.*>//g;
-
     $in{$f} = $v;
   }
 
-            # Get the database handle object
+            # Get a database handle
   my $rdb = CGI::Portal::RDB->new("DBI:$conf->{'database_type'}:database=$conf->{'database_name'};host=$conf->{'database_host'};", $conf->{'database_user'}, $conf->{'database_passw'});
 
-            # This is going to be passed to the CGI::Portal::Scripts object
+            # Reference to parameters, database handle, config
   my $i = {'in',      \%in,
            'rdb',     $rdb,
            'conf',    $conf};
 
-            # Assign the default action
-  my $c = "CGI::Portal::Scripts::$conf->{'actions'}[0]";
-
-            # Loop thru actions and assign if one is chosen
+            # Get requested action or default
+  my $c = $conf->{'actions'}[0];
   foreach my $a (@{$conf->{'actions'}}) {
-    if ($in{'action'} eq $a){
-      $c = "CGI::Portal::Scripts::$a";
+    if ($in{'action'} eq $a) {
+      $c = $a;
     }
   }
 
-            # Create an object, pass $i and call the launch() subroutine
-  eval "use $c;";
-  my $e = $c->new($i);
-  $e->launch;
+            # Use a control
+  if ($in{'submit'} || $in{'Submit'}) {
+    $cl = "CGI::Portal::Controls::$c";
+    eval "use $cl;";
+  } 
+            # Use a script
+  if ($@ || ! ($in{'submit'} || $in{'Submit'})) {
+    $cl = "CGI::Portal::Scripts::$c";
+    eval "use $cl;";
+  }
 
-            # Run Headers launch()
-  my $header = CGI::Portal::Scripts::Header->new({});
+            # Use default
+  if ($@) {
+    $cl = "CGI::Portal::Scripts::$conf->{'actions'}[0]";
+    eval "use $cl;";
+  } 
+            # Create an object and run launch
+  if (! $@) {
+    $e = $cl->new($i);
+    $e->launch;
+  }
+
+            # Create header object and run launch
+  my $header = CGI::Portal::Scripts::Header->new({
+           'in',      \%in,
+           'rdb',     $rdb,
+           'conf',    $conf});
   $header->launch($e);
 
-            # Run Footers launch()
-  my $footer = CGI::Portal::Scripts::Footer->new({});
+            # Create footer object and run launch
+  my $footer = CGI::Portal::Scripts::Footer->new({
+           'in',      \%in,
+           'rdb',     $rdb,
+           'conf',    $conf});
   $footer->launch($e);
 
             # Print
@@ -73,7 +96,7 @@ sub activate {
 
 =head1 NAME
 
-CGI::Portal - Extensible Framework for Multiuser Applications
+CGI::Portal - MVC Framework for Multiuser Applications
 
 =head1 SYNOPSIS
 
@@ -101,7 +124,7 @@ CGI::Portal - Extensible Framework for Multiuser Applications
                            'session_additional'  => "",
 
 
-                           # Classes in the CGI::Portal::Scripts namespace, the first is the default action
+                           # Accessible classes, the first is the default action
 
                            'actions'             => ["logon", "logoff", "register", "profile", "changepw", "emailpw"],
 
@@ -115,7 +138,7 @@ CGI::Portal - Extensible Framework for Multiuser Applications
 
 =head1 DESCRIPTION
 
-CGI::Portal is a framework for the design of extensible,
+CGI::Portal is a MVC framework for the design of extensible,
 plug-configure-and-play multiuser web applications based on preferred object
 oriented coding standards. It provides authentication, session management, internal 
 redirects and a modular architecture to build complex applications.
@@ -125,10 +148,11 @@ style templates and a properly configured startup script. To start with CGI::Por
 may want to install the provided templates at http://cgi-portal.sourceforge.net/
 
 All requests access through the startup script, and are handled by the class in
-the CGI::Portal::Scripts namespace that corresponds to the desired action. Above shown
-actions are included in CGI::Portal.
+the CGI::Portal::Scripts and CGI::Portal::Controls namespace that corresponds to the desired action.
 
-For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
+portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
+
+portal.cgi?action=foo&Submit=1 calls CGI::Portal::Controls::foo::launch()
 
 =head1 FUNCTIONS
 
@@ -136,7 +160,7 @@ For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
 
 CGI::Portal::activate($conf) takes a reference to the configuration hash, collects
 input parameters, creates a database object, and passes those on to your class
-for creating an object instance. It then runs your class "launch" method and
+for creating an object instance. It then runs your classes "launch" method and
 concludes by doing the printing for you. This function is called once from your
 startup script.
 

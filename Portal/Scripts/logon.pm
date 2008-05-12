@@ -1,15 +1,17 @@
 package CGI::Portal::Scripts::logon;
 # Copyright (c) 2008 Alexander David P. All rights reserved.
 #
-# Authenticate
+# Logon Success
 
 use strict;
-use CGI::Portal::Sessions;
+
+use CGI::Portal::Scripts;
 
 use vars qw(@ISA $VERSION);
-$VERSION = "0.10";
 
-@ISA = qw(CGI::Portal::Sessions);
+$VERSION = "0.12";
+
+@ISA = qw(CGI::Portal::Scripts);
 
 1;
 
@@ -20,10 +22,7 @@ sub launch {
   $self->authenticate_user();
   if ($self->{'user'}){
 
-            # Read the template
-    my $template = HTML::Template->new(filename => "$self->{'conf'}{'template_dir'}$self->{'conf'}{'logon_success_html'}");
-
-            # Assign template output to object
-    $self->{'out'} = $template->output;
+            # Assign tmpl
+    $self->assign_tmpl($self->{'conf'}{'logon_success_html'});
   }
 }

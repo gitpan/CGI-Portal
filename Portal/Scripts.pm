@@ -4,10 +4,12 @@ package CGI::Portal::Scripts;
 # Extend this class to add useful attributes and functions
 
 use strict;
+
 use CGI::Portal::Sessions;
 
 use vars qw(@ISA $VERSION);
-$VERSION = "0.10";
+
+$VERSION = "0.12";
 
 @ISA = qw(CGI::Portal::Sessions);
 
@@ -49,18 +51,22 @@ CGI::Portal::Scripts - Building Applications
       my $self = shift;
       .... 
 
-      bless $self, "CGI::Portal::Scripts::other_name";
-      $self->launch;
+      $self->CGI::Portal::Scripts::other_name::launch;
+      return;
     }
 
 =head1 DESCRIPTION
 
 CGI::Portal applications are build by creating classes that reside in the
-CGI::Portal::Scripts namespace and extend CGI::Portal::Scripts. These classes
+CGI::Portal::Scripts and CGI::Portal::Controls namespaces and extend CGI::Portal::Scripts. These classes
 must provide a subroutine launch() that CGI::Portal calls as an object method to
 run your code.
 
-A subroutine new() is not necessary or helpful as you are extending CGI::Portal::Scripts.
+Classes in the CGI::Portal::Scripts handle the assembly of pages, classes in the CGI::Portal::Controls
+namespace handle form submissions. 
+
+CGI::Portal::Controls are called by providing input parameter "Submit" or "submit"
+and should provide internal redirects to call a CGI::Portal::Scripts class.
 
 In your classes, do not print() or exit(). Instead of "print"ing append to $self->{'out'}
 or $self->{'cookies'} and instead of "exit"ing, "return" from launch().

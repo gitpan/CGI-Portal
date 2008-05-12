@@ -1,4 +1,4 @@
-CGI::Portal - Extensible Framework for Multiuser Applications
+CGI::Portal - MVC Framework for Multiuser Applications
 
 SYNOPSIS
 
@@ -26,7 +26,7 @@ SYNOPSIS
                            'session_additional'  => "",
 
 
-                           # Classes in the CGI::Portal::Scripts namespace, the first is the default action
+                           # Accessible classes, the first is the default action
 
                            'actions'             => ["logon", "logoff", "register", "profile", "changepw", "emailpw"],
 
@@ -40,7 +40,7 @@ SYNOPSIS
 
 DESCRIPTION
 
-CGI::Portal is a framework for the design of extensible,
+CGI::Portal is a MVC framework for the design of extensible,
 plug-configure-and-play multiuser web applications based on preferred object
 oriented coding standards. It provides authentication, session management, internal 
 redirects and a modular architecture to build complex applications.
@@ -50,10 +50,11 @@ style templates and a properly configured starrtup script. To start with CGI::Po
 may want to install the provided Templates at http://cgi-portal.sourceforge.net/
 
 All requests access through the startup script, and are handled by the class in
-the CGI::Portal::Scripts namespace that corresponds to the desired action. Above shown
-actions are included in CGI::Portal.
+the CGI::Portal::Scripts and CGI::Portal::Controls namespace that corresponds to the desired action.
 
-For example, portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
+portal.cgi?action=foo calls CGI::Portal::Scripts::foo::launch()
+
+portal.cgi?action=foo&Submit=1 calls CGI::Portal::Controls::foo::launch()
 
 FUNCTIONS
 
@@ -113,13 +114,17 @@ Internal Redirects
 DESCRIPTION
 
 CGI::Portal applications are build by creating classes that reside in the
-CGI::Portal::Scripts namespace and extend CGI::Portal::Scripts. These classes
+CGI::Portal::Scripts and CGI::Portal::Controls namespaces and extend CGI::Portal::Scripts. These classes
 must provide a subroutine launch() that CGI::Portal calls as an object method to
 run your code.
 
-A constructor new() is not necessary or helpful as you are extending CGI::Portal::Scripts.
+Classes in the CGI::Portal::Scripts handle the assembly of pages, classes in the CGI::Portal::Controls
+namespace handle form submissions. 
 
-In your class, do not print() or exit(). Instead of "print"ing append to $self->{'out'}
+CGI::Portal::Controls are called by providing input parameter "Submit" or "submit"
+and should provide internal redirects to call a CGI::Portal::Scripts class.
+
+In your classes, do not print() or exit(). Instead of "print"ing append to $self->{'out'}
 or $self->{'cookies'} and instead of "exit"ing, "return" from launch().
 
 Extending CGI::Portal::Scripts, gives you access to an object with the following attributes.
